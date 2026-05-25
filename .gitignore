@@ -1,0 +1,6 @@
+# Ignore photo files
+private_assets/
+
+# Ignore local system files
+.DS_Store
+Thumbs.db
