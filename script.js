@@ -23,20 +23,76 @@ const gameBoard = document.getElementById('game-board');
 submitBtn.addEventListener('click', checkAnswer);
 secretInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAnswer(); });
 nextBtn.addEventListener('click', () => {
-    currentGroupIndex++;
-    loadChapter(currentGroupIndex);
+    gameBoard.classList.add('slide-out-left');
+
+    setTimeout(() => {
+        currentGroupIndex++;
+        loadChapter(currentGroupIndex);
+        
+        gameBoard.classList.remove('slide-out-left');
+        gameBoard.classList.add('slide-in-right');
+        
+        setTimeout(() => {
+            gameBoard.classList.remove('slide-in-right');
+        }, 400);
+    }, 400);
 });
+
+// --- Sound Synthesizer Engine (Web Audio API) ---
+function playDingSound() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        
+        // First high chime note
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 note
+        gain1.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start();
+        osc1.stop(ctx.currentTime + 0.4);
+
+        // Second harmonic chime note slightly delayed
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(880.00, ctx.currentTime + 0.08); // A5 note
+        gain2.gain.setValueAtTime(0.1, ctx.currentTime + 0.08);
+        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(ctx.currentTime + 0.08);
+        osc2.stop(ctx.currentTime + 0.5);
+    } catch (e) {
+        console.log("Audio presentation blocked or unsupported on initial interaction context.");
+    }
+}
 
 // --- Logic ---
 function checkAnswer() {
     if (secretInput.value.toLowerCase() === secretAnswer.toLowerCase()) {
         secretInput.classList.add('success-border');
+        
+        // Play the success chime
+        playDingSound();
+        
+        // Apply global green flash victory state and display greeting text
+        document.body.classList.add('global-success-flash');
+        welcomeScreen.querySelector('h1').innerText = "¡Bienvenido!";
+        errorMsg.style.display = 'none';
+
         setTimeout(() => {
+            // Revert background color back to normal midnight theme during screen transition
+            document.body.classList.remove('global-success-flash');
             welcomeScreen.style.display = 'none';
             gameScreen.style.display = 'block';
             gameScreen.classList.add('fade-in');
             loadChapter(0);
-        }, 500);
+        }, 1200); // Extended slightly to let the green welcome screen look clean and deliberate
     } else {
         welcomeScreen.classList.add('shake');
         errorMsg.style.display = 'block';
@@ -53,12 +109,137 @@ function loadChapter(index) {
     }
     const group = storyGroups[index];
     messageDisplay.innerText = group.text;
-    nextBtn.style.display = 'block';
+    nextBtn.style.display = 'none';
     gameBoard.innerHTML = '';
-    group.images.forEach(imgSrc => {
+
+    group.images.forEach((imgSrc, imgIndex) => {
+        const slot = document.createElement('div');
+        slot.className = 'puzzle-slot';
+        slot.id = `slot-${imgIndex}`;
+        
+        if (imgIndex === 0) {
+            slot.classList.add('active');
+        } else {
+            slot.classList.add('locked');
+        }
+        
+        gameBoard.appendChild(slot);
+        createPuzzleSlices(slot, imgSrc);
+    });
+}
+
+function createPuzzleSlices(slotContainer, imgSrc) {
+    const coordinates = [
+        {x: 0, y: 0}, {x: 50, y: 0}, {x: 100, y: 0},
+        {x: 0, y: 50}, {x: 50, y: 50}, {x: 100, y: 50},
+        {x: 0, y: 100}, {x: 50, y: 100}, {x: 100, y: 100}
+    ];
+
+    const scrambledCoordinates = [...coordinates].sort(() => Math.random() - 0.5);
+
+    scrambledCoordinates.forEach((coord) => {
         const piece = document.createElement('div');
         piece.className = 'puzzle-piece';
         piece.style.backgroundImage = `url('${imgSrc}')`;
-        gameBoard.appendChild(piece);
+        piece.style.backgroundPosition = `${coord.x}% ${coord.y}%`;
+        
+        piece.dataset.correctX = coord.x;
+        piece.dataset.correctY = coord.y;
+
+        addPointerListeners(piece);
+        slotContainer.appendChild(piece);
     });
+}
+
+let activePiece = null;
+let originalSlot = null;
+
+function addPointerListeners(piece) {
+    piece.addEventListener('pointerdown', (e) => {
+        if (e.target.parentElement.classList.contains('locked')) return;
+
+        activePiece = e.target;
+        originalSlot = activePiece.parentElement;
+        
+        activePiece.style.opacity = '0.6';
+        activePiece.setPointerCapture(e.pointerId);
+    });
+
+    piece.addEventListener('pointerup', (e) => {
+        if (!activePiece) return;
+
+        activePiece.style.opacity = '1';
+        activePiece.releasePointerCapture(e.pointerId);
+
+        const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
+
+        if (
+            dropTarget && 
+            dropTarget.classList.contains('puzzle-piece') && 
+            dropTarget !== activePiece &&
+            dropTarget.parentElement === originalSlot
+        ) {
+            const originalBgImg = activePiece.style.backgroundImage;
+            const originalBgPos = activePiece.style.backgroundPosition;
+            
+            activePiece.style.backgroundImage = dropTarget.style.backgroundImage;
+            activePiece.style.backgroundPosition = dropTarget.style.backgroundPosition;
+            
+            dropTarget.style.backgroundImage = originalBgImg;
+            dropTarget.style.backgroundPosition = originalBgPos;
+
+            const originalX = activePiece.dataset.correctX;
+            const originalY = activePiece.dataset.correctY;
+
+            activePiece.dataset.correctX = dropTarget.dataset.correctX;
+            activePiece.dataset.correctY = dropTarget.dataset.correctY;
+
+            dropTarget.dataset.correctX = originalX;
+            dropTarget.dataset.correctY = originalY;
+
+            checkSlotSolved(originalSlot);
+        }
+
+        activePiece = null;
+        originalSlot = null;
+    });
+}
+
+function checkSlotSolved(slotElement) {
+    const pieces = slotElement.querySelectorAll('.puzzle-piece');
+    let completed = true;
+
+    pieces.forEach(piece => {
+        const currentPos = piece.style.backgroundPosition.replace(/\s+/g, '');
+        const targetPos = `${piece.dataset.correctX}%${piece.dataset.correctY}%`;
+        if (currentPos !== targetPos) {
+            completed = false;
+        }
+    });
+
+    if (completed) {
+        slotElement.classList.remove('active');
+        slotElement.style.borderColor = '#22c55e';
+        slotElement.classList.add('puzzle-solved-pop');
+        
+        if (slotElement.id === 'slot-0') {
+            setTimeout(() => unlockNextSlot('slot-1'), 400);
+        } else if (slotElement.id === 'slot-1') {
+            setTimeout(() => unlockNextSlot('slot-2'), 400);
+        } else if (slotElement.id === 'slot-2' || !document.getElementById('slot-2')) {
+            nextBtn.style.display = 'block';
+            nextBtn.classList.add('fade-in');
+        }
+    }
+}
+
+function unlockNextSlot(id) {
+    const nextSlot = document.getElementById(id);
+    if (nextSlot) {
+        nextSlot.classList.remove('locked');
+        nextSlot.classList.add('active');
+    } else {
+        nextBtn.style.display = 'block';
+        nextBtn.classList.add('fade-in');
+    }
 }

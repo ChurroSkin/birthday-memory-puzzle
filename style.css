@@ -5,6 +5,7 @@ body {
     background-color: #050505; 
     display: flex; justify-content: center; align-items: center;
     min-height: 100vh; margin: 0; color: #a0aec0; 
+    transition: background-color 0.4s ease; /* Enables seamless transition for the flash effect */
 }
 
 /* --- Container --- */
@@ -12,27 +13,125 @@ body {
     text-align: center; background: #0f0f0f; 
     padding: 2.5rem; border-radius: 20px; 
     box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
-    width: 90%; max-width: 500px;
+    width: 90%; max-width: 800px;
     border-top: 6px solid #1e3a8a;
+    transition: max-width 0.3s ease;
 }
 
 /* --- UI Elements --- */
-h1 { color: #f8fafc; }
+h1 { color: #f8fafc; transition: color 0.3s ease; }
 input { padding: 12px; width: 70%; border-radius: 8px; border: 1px solid #1a1a1a; background-color: #050505; color: #e2e8f0; }
-button { padding: 12px 20px; cursor: pointer; background: #1e3a8a; color: #f8fafc; border: none; border-radius: 8px; font-weight: 600; transition: 0.3s; }
+button { padding: 12px 20px; cursor: pointer; background: #1e3a8a; color: #f8fafc; border: none; border-radius: 8px; font-weight: 600; transition: 0.3s; margin-top: 10px; }
 button:hover { background: #172554; }
 
-/* --- Game Board & Pieces --- */
+/* --- Master Board Configuration --- */
 #game-board { 
-    margin: 25px 0; min-height: 250px; border: 2px dashed #1a1a1a; 
-    border-radius: 12px; display: grid; grid-template-columns: repeat(3, 1fr); 
-    gap: 10px; padding: 10px; background: #0a0a0a;
+    margin: 25px 0; 
+    min-height: 250px; 
+    border: 2px dashed #1a1a1a; 
+    border-radius: 12px; 
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 12px; 
+    padding: 12px; 
+    background: #0a0a0a;
 }
-.puzzle-piece { width: 100%; height: 100px; background-size: cover; background-position: center; border-radius: 8px; }
 
-/* --- Animations --- */
+/* --- Individual 3x3 Puzzle Slot Enclosures --- */
+.puzzle-slot {
+    width: 32%;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px;
+    background: #111827;
+    border: 2px solid #1f2937;
+    border-radius: 8px;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(0);
+    touch-action: none;
+}
+
+.puzzle-slot.active {
+    border-color: #1e3a8a;
+    box-shadow: 0 0 15px rgba(30, 58, 138, 0.6);
+    opacity: 1;
+    transform: translateY(-4px);
+}
+
+.puzzle-slot.locked {
+    opacity: 0.15;
+    pointer-events: none;
+    filter: grayscale(100%);
+}
+
+/* --- Individual Slices --- */
+.puzzle-piece { 
+    width: 100%; 
+    height: 100%; 
+    background-size: 300% 300%;
+    border: 1px solid #050505;
+    border-radius: 4px; 
+    cursor: grab;
+    user-select: none;
+}
+
+.puzzle-piece:active {
+    cursor: grabbing;
+}
+
+/* --- Animations & Screen States --- */
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
 .shake { animation: shake 0.4s ease-in-out; }
 .fade-in { animation: fadeIn 1s ease-in; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .success-border { border-color: #22c55e !important; }
+
+/* The full-screen green welcome success mode style */
+.global-success-flash {
+    background-color: #14532d !important; /* Rich forest green */
+}
+
+.puzzle-solved-pop {
+    animation: solvedPop 0.5s ease-in-out forwards;
+}
+
+@keyframes solvedPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.04); box-shadow: 0 0 25px rgba(34, 197, 94, 0.8); }
+    100% { transform: scale(1); box-shadow: 0 0 12px rgba(34, 197, 94, 0.4); }
+}
+
+.slide-out-left {
+    animation: slideOutLeft 0.4s ease-in forwards;
+}
+
+.slide-in-right {
+    animation: slideInRight 0.4s ease-out forwards;
+}
+
+@keyframes slideOutLeft {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(-50px); }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* --- Responsive Layout Breakpoint for Mobile Play --- */
+@media (max-width: 768px) {
+    #game-container { max-width: 450px; }
+    #game-board {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    .puzzle-slot {
+        width: 90%;
+        max-width: 280px;
+    }
+}
