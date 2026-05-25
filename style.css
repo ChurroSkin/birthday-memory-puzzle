@@ -1,5 +1,69 @@
-body { font-family: sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; padding-top: 50px; }
-#game-container { text-align: center; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 80%; max-width: 500px; }
-#game-board { margin: 20px 0; min-height: 200px; border: 2px dashed #ccc; }
-input { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
-button { padding: 8px 15px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+/* Theme */
+* { box-sizing: border-box; }
+
+body { 
+    font-family: 'Segoe UI', sans-serif; 
+    background-color: #050505; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    color: #a0aec0; 
+}
+
+/* The Main Card */
+#game-container { 
+    text-align: center; 
+    background: #0f0f0f;
+    padding: 2.5rem; 
+    border-radius: 20px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    width: 90%; 
+    max-width: 500px;
+    border-top: 6px solid #1e3a8a;
+}
+
+/* Typography */
+h1 { color: #f8fafc; margin-bottom: 1.5rem; }
+p { color: #718096; }
+
+/* Inputs and Buttons */
+input { 
+    padding: 12px; 
+    width: 70%; 
+    border-radius: 8px; 
+    border: 1px solid #1a1a1a; 
+    background-color: #050505;
+    color: #e2e8f0;
+    font-size: 16px;
+}
+
+input:focus { border-color: #1e3a8a; outline: none; }
+
+button { 
+    padding: 12px 20px; 
+    cursor: pointer; 
+    background: #1e3a8a;
+    color: #f8fafc; 
+    border: none; 
+    border-radius: 8px; 
+    font-size: 16px;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+button:hover { background: #172554; }
+
+/* Game Board Area */
+#game-board { 
+    margin: 25px 0; 
+    min-height: 250px; 
+    border: 2px dashed #1a1a1a;
+    border-radius: 12px; 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 8px; 
+    padding: 10px;
+    background: #0a0a0a;
+}
