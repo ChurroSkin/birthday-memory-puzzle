@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feliz Cumpleaños</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main id="game-container">
+        <div id="welcome-screen">
+            <h1>¡Feliz Cumpleaños Hermano!</h1>
+            <p>Antes de empezar, responde el acertijo: Quien odia su propia idioma?</p>
+            <input type="text" id="secret-input" placeholder="Responde...">
+            <button id="submit-btn">Unlock</button>
+            <p id="error-msg" style="color: red; display: none;">Nel. Intenta de nuevo.</p>
+        </div>
+
+        <div id="game-screen" style="display: none;">
+            <h1>Nuestros Recuerdos</h1>
+            <div id="game-board"></div>
+            <p id="message-display"></p>
+            <button id="next-btn" style="display: none;">Siguiente</button>
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
