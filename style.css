@@ -15,7 +15,6 @@ body {
     overflow-x: hidden;
 }
 
-/* Background grid container built via JS */
 #bg-grid-container {
     position: fixed;
     top: 0;
@@ -149,13 +148,11 @@ button:hover {
     background-size: 300% 300%;
     border: 1px solid #050505;
     border-radius: 4px; 
-    cursor: grab;
+    cursor: pointer;
     user-select: none;
-    transition: opacity 0.3s ease, transform 0.15s ease, box-shadow 0.15s ease, background-position 0.2s ease-in-out; 
-}
-
-.puzzle-piece:active {
-    cursor: grabbing;
+    -webkit-user-drag: none;
+    touch-action: none;
+    transition: opacity 0.3s ease, transform 0.15s ease, box-shadow 0.15s ease, background-position 0.2s ease-in-out, outline 0.1s ease; 
 }
 
 .puzzle-piece.swapping {

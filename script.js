@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentRow = Math.floor(i / cols);
         const currentCol = i % cols;
 
-        // Alternating checkerboard pattern logic
         if ((currentRow + currentCol) % 2 === 0) {
             cell.classList.add("peru");
         } else {
@@ -31,11 +30,26 @@ document.addEventListener("DOMContentLoaded", () => {
 // Game Data
 const secretAnswer = "Brian";
 const storyGroups = [
-    { text: "Las bases de nuestra historia.", images: ["picture1.jpeg", "picture2.jpeg", "picture3.jpeg"] },
-    { text: "Creciendo juntos.", images: ["picture4.jpeg", "picture5.jpeg", "picture6.jpeg"] },
-    { text: "Momentos inolvidables.", images: ["picture7.jpeg", "picture8.jpeg", "picture9.jpeg"] },
-    { text: "Construyendo el futuro.", images: ["picture10.jpeg", "picture11.jpeg", "picture12.jpeg"] },
-    { text: "Donde estamos hoy.", images: ["picture13.jpeg", "picture14.jpeg"] }
+    { 
+        text: "Las bases de nuestra historia.", 
+        images: ["private_assets/picture1.jpeg", "private_assets/picture2.jpeg", "private_assets/picture3.jpeg"] 
+    },
+    { 
+        text: "Creciendo juntos.", 
+        images: ["private_assets/picture4.jpeg", "private_assets/picture5.jpeg", "private_assets/picture6.jpeg"] 
+    },
+    { 
+        text: "Momentos inolvidables.", 
+        images: ["private_assets/picture7.jpeg", "private_assets/picture8.jpeg", "private_assets/picture9.jpeg"] 
+    },
+    { 
+        text: "Construyendo el futuro.", 
+        images: ["private_assets/picture10.jpeg", "private_assets/picture11.jpeg", "private_assets/picture12.jpeg"] 
+    },
+    { 
+        text: "Donde estamos hoy.", 
+        images: ["private_assets/picture13.jpeg", "private_assets/picture14.jpeg"] 
+    }
 ];
 let currentGroupIndex = 0;
 
@@ -68,7 +82,6 @@ nextBtn.addEventListener('click', () => {
     }, 400);
 });
 
-// Simple synthesizer chime for correct answers
 function playDingSound() {
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -188,67 +201,71 @@ function createPuzzleSlices(slotContainer, imgSrc) {
     });
 }
 
-let activePiece = null;
-let originalSlot = null;
+let selectedPiece = null;
 
 function addPointerListeners(piece) {
-    piece.addEventListener('pointerdown', (e) => {
-        if (e.target.parentElement.classList.contains('locked')) return;
-
-        activePiece = e.target;
-        originalSlot = activePiece.parentElement;
+    piece.addEventListener('click', (e) => {
+        const currentSlot = e.target.parentElement;
         
-        activePiece.style.opacity = '0.6';
-        activePiece.style.transform = 'scale(1.04)'; 
-        activePiece.setPointerCapture(e.pointerId);
-    });
+        if (currentSlot.classList.contains('locked')) return;
 
-    piece.addEventListener('pointerup', (e) => {
-        if (!activePiece) return;
-
-        activePiece.style.opacity = '1';
-        activePiece.style.transform = 'scale(1)';
-        activePiece.releasePointerCapture(e.pointerId);
-
-        const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
-
-        if (
-            dropTarget && 
-            dropTarget.classList.contains('puzzle-piece') && 
-            dropTarget !== activePiece &&
-            dropTarget.parentElement === originalSlot
-        ) {
-            activePiece.classList.add('swapping');
-            dropTarget.classList.add('swapping');
-
-            setTimeout(() => {
-                const originalBgImg = activePiece.style.backgroundImage;
-                const originalBgPos = activePiece.style.backgroundPosition;
-                
-                activePiece.style.backgroundImage = dropTarget.style.backgroundImage;
-                activePiece.style.backgroundPosition = dropTarget.style.backgroundPosition;
-                
-                dropTarget.style.backgroundImage = originalBgImg;
-                dropTarget.style.backgroundPosition = originalBgPos;
-
-                const originalX = activePiece.dataset.correctX;
-                const originalY = activePiece.dataset.correctY;
-
-                activePiece.dataset.correctX = dropTarget.dataset.correctX;
-                activePiece.dataset.correctY = dropTarget.dataset.correctY;
-
-                dropTarget.dataset.correctX = originalX;
-                dropTarget.dataset.correctY = originalY;
-
-                activePiece.classList.remove('swapping');
-                dropTarget.classList.remove('swapping');
-
-                checkSlotSolved(originalSlot);
-            }, 50); 
+        if (!selectedPiece) {
+            selectedPiece = e.target;
+            selectedPiece.style.outline = '3px solid #1e3a8a';
+            selectedPiece.style.transform = 'scale(0.95)';
+            return;
         }
 
-        activePiece = null;
-        originalSlot = null;
+        if (selectedPiece === e.target) {
+            selectedPiece.style.outline = 'none';
+            selectedPiece.style.transform = 'scale(1)';
+            selectedPiece = null;
+            return;
+        }
+
+        if (selectedPiece.parentElement === currentSlot) {
+            const firstPiece = selectedPiece;
+            const secondPiece = e.target;
+
+            firstPiece.classList.add('swapping');
+            secondPiece.classList.add('swapping');
+
+            const tempBgImg = firstPiece.style.backgroundImage;
+            const tempBgPos = firstPiece.style.backgroundPosition;
+            
+            firstPiece.style.backgroundImage = secondPiece.style.backgroundImage;
+            firstPiece.style.backgroundPosition = secondPiece.style.backgroundPosition;
+            
+            secondPiece.style.backgroundImage = tempBgImg;
+            secondPiece.style.backgroundPosition = tempBgPos;
+
+            const tempX = firstPiece.dataset.correctX;
+            const tempY = firstPiece.dataset.correctY;
+
+            firstPiece.dataset.correctX = secondPiece.dataset.correctX;
+            firstPiece.dataset.correctY = secondPiece.dataset.correctY;
+
+            secondPiece.dataset.correctX = tempX;
+            secondPiece.dataset.correctY = tempY;
+
+            firstPiece.style.outline = 'none';
+            firstPiece.style.transform = 'scale(1)';
+            
+            setTimeout(() => {
+                firstPiece.classList.remove('swapping');
+                secondPiece.classList.remove('swapping');
+                checkSlotSolved(currentSlot);
+            }, 50);
+        } else {
+            selectedPiece.style.outline = 'none';
+            selectedPiece.style.transform = 'scale(1)';
+            selectedPiece = e.target;
+            selectedPiece.style.outline = '3px solid #1e3a8a';
+            selectedPiece.style.transform = 'scale(0.95)';
+            return;
+        }
+
+        selectedPiece = null;
     });
 }
 
