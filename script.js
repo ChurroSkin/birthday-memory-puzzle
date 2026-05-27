@@ -176,25 +176,31 @@ function loadChapter(index) {
 }
 
 function createPuzzleSlices(slotContainer, imgSrc) {
-    const coordinates = [
+    // Definitive goal positions for a perfect 3x3 layout
+    const targetCoordinates = [
         {x: 0, y: 0}, {x: 50, y: 0}, {x: 100, y: 0},
         {x: 0, y: 50}, {x: 50, y: 50}, {x: 100, y: 50},
         {x: 0, y: 100}, {x: 50, y: 100}, {x: 100, y: 100}
     ];
 
-    const scrambledCoordinates = [...coordinates].sort(() => Math.random() - 0.5);
+    // Create a scrambled list of background placements
+    const scrambledCoordinates = [...targetCoordinates].sort(() => Math.random() - 0.5);
 
-    scrambledCoordinates.forEach((coord, i) => {
+    targetCoordinates.forEach((targetCoord, i) => {
         const piece = document.createElement('div');
         piece.className = 'puzzle-piece';
+        
+        // Give it a random image placement from the scrambled array
+        const randomImageSlice = scrambledCoordinates[i];
         piece.style.backgroundImage = `url('${imgSrc}')`;
-        piece.style.backgroundPosition = `${coord.x}% ${coord.y}%`;
+        piece.style.backgroundPosition = `${randomImageSlice.x}% ${randomImageSlice.y}%`;
         
         piece.style.opacity = '0';
         setTimeout(() => piece.style.opacity = '1', 50 * i);
 
-        piece.dataset.correctX = coord.x;
-        piece.dataset.correctY = coord.y;
+        // Keep target solution expectations locked to the static container indexes
+        piece.dataset.correctX = targetCoord.x;
+        piece.dataset.correctY = targetCoord.y;
 
         addPointerListeners(piece);
         slotContainer.appendChild(piece);
@@ -230,6 +236,7 @@ function addPointerListeners(piece) {
             firstPiece.classList.add('swapping');
             secondPiece.classList.add('swapping');
 
+            // Swap background images and positions
             const tempBgImg = firstPiece.style.backgroundImage;
             const tempBgPos = firstPiece.style.backgroundPosition;
             
@@ -239,15 +246,7 @@ function addPointerListeners(piece) {
             secondPiece.style.backgroundImage = tempBgImg;
             secondPiece.style.backgroundPosition = tempBgPos;
 
-            const tempX = firstPiece.dataset.correctX;
-            const tempY = firstPiece.dataset.correctY;
-
-            firstPiece.dataset.correctX = secondPiece.dataset.correctX;
-            firstPiece.dataset.correctY = secondPiece.dataset.correctY;
-
-            secondPiece.dataset.correctX = tempX;
-            secondPiece.dataset.correctY = tempY;
-
+            // Clear selected layout styling
             firstPiece.style.outline = 'none';
             firstPiece.style.transform = 'scale(1)';
             
@@ -276,6 +275,7 @@ function checkSlotSolved(slotElement) {
     pieces.forEach(piece => {
         const currentPos = piece.style.backgroundPosition.replace(/\s+/g, '');
         const targetPos = `${piece.dataset.correctX}%${piece.dataset.correctY}%`;
+        
         if (currentPos !== targetPos) {
             completed = false;
         }
