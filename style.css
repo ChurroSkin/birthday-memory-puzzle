@@ -1,37 +1,106 @@
-/* --- Global Styles --- */
-* { box-sizing: border-box; }
+* { 
+    box-sizing: border-box; 
+}
+
 body { 
     font-family: 'Segoe UI', sans-serif; 
     background-color: #050505; 
-    background-image: 
-        repeating-linear-gradient(45deg, rgba(214, 28, 44, 0.04) 0px, rgba(214, 28, 44, 0.04) 40px, rgba(255, 255, 255, 0.02) 40px, rgba(255, 255, 255, 0.02) 80px),
-        repeating-linear-gradient(-45deg, rgba(116, 172, 223, 0.04) 0px, rgba(116, 172, 223, 0.04) 40px, rgba(255, 255, 255, 0.02) 40px, rgba(255, 255, 255, 0.02) 80px);
-    display: flex; justify-content: center; align-items: center;
-    min-height: 100vh; margin: 0; color: #a0aec0; 
-    transition: background-color 0.4s ease, background-image 0.4s ease; 
+    position: relative;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    min-height: 100vh; 
+    margin: 0; 
+    color: #a0aec0; 
+    overflow-x: hidden;
 }
 
-/* --- Container --- */
+/* Background grid container built via JS */
+#bg-grid-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    display: grid;
+    gap: 0;
+    opacity: 0.14;
+    pointer-events: none;
+    overflow: hidden;
+    transition: opacity 0.4s ease;
+}
+
+.bg-cell {
+    width: 100%;
+    aspect-ratio: 1 / 1; 
+    background-size: cover; 
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.bg-cell.peru {
+    background-image: url('private_assets/peru-bg.png');
+}
+
+.bg-cell.argentina {
+    background-image: url('private_assets/argentina-bg.png');
+}
+
 #game-container { 
-    text-align: center; background: #0f0f0f; 
-    padding: 2.5rem; border-radius: 20px; 
+    position: relative;
+    z-index: 1;
+    text-align: center; 
+    background: #0f0f0f; 
+    padding: 2.5rem; 
+    border-radius: 20px; 
     box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
-    width: 90%; max-width: 800px;
+    width: 90%; 
+    max-width: 800px;
     border-top: 6px solid #1e3a8a;
     transition: max-width 0.3s ease;
 }
 
-/* --- UI Elements --- */
-h1 { color: #f8fafc; transition: color 0.3s ease; }
-input { padding: 12px; width: 70%; border-radius: 8px; border: 1px solid #1a1a1a; background-color: #050505; color: #e2e8f0; transition: border-color 0.2s; }
-input:focus { border-color: #1e3a8a; outline: none; }
-button { padding: 12px 20px; cursor: pointer; background: #1e3a8a; color: #f8fafc; border: none; border-radius: 8px; font-weight: 600; transition: 0.3s; margin-top: 10px; }
-button:hover { background: #172554; }
+h1 { 
+    color: #f8fafc; 
+    transition: color 0.3s ease; 
+}
 
-/* Message Display Transition Styling */
-#message-display { transition: opacity 0.25s ease, transform 0.25s ease; }
+input { 
+    padding: 12px; 
+    width: 70%; 
+    border-radius: 8px; 
+    border: 1px solid #1a1a1a; 
+    background-color: #050505; 
+    color: #e2e8f0; 
+    transition: border-color 0.2s; 
+}
 
-/* --- Master Board Configuration --- */
+input:focus { 
+    border-color: #1e3a8a; 
+    outline: none; 
+}
+
+button { 
+    padding: 12px 20px; 
+    cursor: pointer; 
+    background: #1e3a8a; 
+    color: #f8fafc; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: 600; 
+    transition: 0.3s; 
+    margin-top: 10px; 
+}
+
+button:hover { 
+    background: #172554; 
+}
+
+#message-display { 
+    transition: opacity 0.25s ease, transform 0.25s ease; 
+}
+
 #game-board { 
     margin: 25px 0; 
     min-height: 250px; 
@@ -43,10 +112,9 @@ button:hover { background: #172554; }
     gap: 12px; 
     padding: 12px; 
     background: #0a0a0a;
-    transition: transform 0.4s ease, opacity 0.4s ease; /* Enables the slide animations */
+    transition: transform 0.4s ease, opacity 0.4s ease; 
 }
 
-/* --- Individual 3x3 Puzzle Slot Enclosures --- */
 .puzzle-slot {
     width: 32%;
     aspect-ratio: 1 / 1;
@@ -57,7 +125,7 @@ button:hover { background: #172554; }
     background: #111827;
     border: 2px solid #1f2937;
     border-radius: 8px;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); /* Slower, smoother easing */
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
     transform: translateY(0);
     touch-action: none;
 }
@@ -66,7 +134,7 @@ button:hover { background: #172554; }
     border-color: #1e3a8a;
     box-shadow: 0 0 15px rgba(30, 58, 138, 0.6);
     opacity: 1;
-    transform: translateY(-6px); /* slightly more lift */
+    transform: translateY(-6px); 
 }
 
 .puzzle-slot.locked {
@@ -75,7 +143,6 @@ button:hover { background: #172554; }
     filter: grayscale(100%);
 }
 
-/* --- Individual Slices --- */
 .puzzle-piece { 
     width: 100%; 
     height: 100%; 
@@ -84,37 +151,42 @@ button:hover { background: #172554; }
     border-radius: 4px; 
     cursor: grab;
     user-select: none;
-    transition: opacity 0.3s ease, transform 0.15s ease, box-shadow 0.15s ease, background-position 0.2s ease-in-out; /* Smooth everything */
+    transition: opacity 0.3s ease, transform 0.15s ease, box-shadow 0.15s ease, background-position 0.2s ease-in-out; 
 }
 
 .puzzle-piece:active {
     cursor: grabbing;
 }
 
-/* Smooth Swapping Visual Feedback */
 .puzzle-piece.swapping {
     opacity: 0.3;
     transform: scale(0.9);
 }
 
-/* --- Animations & Screen States --- */
-@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+@keyframes shake { 
+    0%, 100% { transform: translateX(0); } 
+    25% { transform: translateX(-10px); } 
+    75% { transform: translateX(10px); } 
+}
 .shake { animation: shake 0.4s ease-in-out; }
 
 .fade-in { animation: fadeIn 1s ease-in; }
 .fade-in-quick { animation: fadeIn 0.25s ease-in; }
-.fade-out { opacity: 0; transform: translateY(4px); } /* for message text only */
+.fade-out { opacity: 0; transform: translateY(4px); } 
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
 .success-border { border-color: #22c55e !important; }
 
 .global-success-flash {
     background-color: #14532d !important; 
-    background-image: none !important; 
+    transition: background-color 0.4s ease;
 }
 
 .puzzle-solved-pop {
-    animation: solvedPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; /* Elastic pop */
+    animation: solvedPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
 }
 
 @keyframes solvedPop {
@@ -141,7 +213,6 @@ button:hover { background: #172554; }
     to { opacity: 1; transform: translateX(0) scale(1); }
 }
 
-/* --- Responsive Layout Breakpoint for Mobile Play --- */
 @media (max-width: 768px) {
     #game-container { max-width: 450px; }
     #game-board {

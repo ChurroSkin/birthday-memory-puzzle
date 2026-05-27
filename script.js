@@ -1,4 +1,34 @@
-// --- Data ---
+// Dynamic background grid generation
+document.addEventListener("DOMContentLoaded", () => {
+    const gridContainer = document.createElement("div");
+    gridContainer.id = "bg-grid-container";
+    document.body.prepend(gridContainer);
+
+    const cellSize = 120; 
+    const cols = Math.ceil(window.innerWidth / cellSize);
+    const rows = Math.ceil(window.innerHeight / cellSize);
+    const totalCells = cols * rows;
+
+    gridContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+    for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement("div");
+        cell.className = "bg-cell";
+        
+        const currentRow = Math.floor(i / cols);
+        const currentCol = i % cols;
+
+        // Alternating checkerboard pattern logic
+        if ((currentRow + currentCol) % 2 === 0) {
+            cell.classList.add("peru");
+        } else {
+            cell.classList.add("argentina");
+        }
+        gridContainer.appendChild(cell);
+    }
+});
+
+// Game Data
 const secretAnswer = "Brian";
 const storyGroups = [
     { text: "Las bases de nuestra historia.", images: ["picture1.jpeg", "picture2.jpeg", "picture3.jpeg"] },
@@ -9,7 +39,7 @@ const storyGroups = [
 ];
 let currentGroupIndex = 0;
 
-// --- Selectors ---
+// DOM Elements
 const welcomeScreen = document.getElementById('welcome-screen');
 const gameScreen = document.getElementById('game-screen');
 const secretInput = document.getElementById('secret-input');
@@ -19,30 +49,26 @@ const messageDisplay = document.getElementById('message-display');
 const nextBtn = document.getElementById('next-btn');
 const gameBoard = document.getElementById('game-board');
 
-// --- Listeners ---
+// Event Listeners
 submitBtn.addEventListener('click', checkAnswer);
 secretInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAnswer(); });
 nextBtn.addEventListener('click', () => {
-    // 1. Begin exit animation for the old stage
     gameBoard.classList.add('slide-out-left');
 
-    // 2. Wait for the exit animation (400ms) to complete before swapping data
     setTimeout(() => {
         currentGroupIndex++;
         loadChapter(currentGroupIndex);
         
-        // 3. Clean up the exit class and begin the entrance animation
         gameBoard.classList.remove('slide-out-left');
         gameBoard.classList.add('slide-in-right');
         
-        // 4. Clean up the entrance class so it can be re-played later
         setTimeout(() => {
             gameBoard.classList.remove('slide-in-right');
         }, 400);
     }, 400);
 });
 
-// --- Sound Synthesizer Engine (Web Audio API) ---
+// Simple synthesizer chime for correct answers
 function playDingSound() {
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -70,18 +96,19 @@ function playDingSound() {
         osc2.start(ctx.currentTime + 0.08);
         osc2.stop(ctx.currentTime + 0.5);
     } catch (e) {
-        console.log("Audio presentation blocked or unsupported on initial interaction context.");
+        console.log("Audio blocked by browser autoplay policy");
     }
 }
 
-// --- Logic ---
 function checkAnswer() {
     if (secretInput.value.toLowerCase() === secretAnswer.toLowerCase()) {
         secretInput.classList.add('success-border');
-        
         playDingSound();
-        
         document.body.classList.add('global-success-flash');
+        
+        const gridContainer = document.getElementById('bg-grid-container');
+        if (gridContainer) gridContainer.style.opacity = '0';
+
         welcomeScreen.querySelector('h1').innerText = "¡Bienvenido!";
         errorMsg.style.display = 'none';
 
@@ -108,7 +135,6 @@ function loadChapter(index) {
     }
     const group = storyGroups[index];
     
-    // Add smooth message transition
     messageDisplay.classList.add('fade-out');
     setTimeout(() => {
         messageDisplay.innerText = group.text;
@@ -151,7 +177,6 @@ function createPuzzleSlices(slotContainer, imgSrc) {
         piece.style.backgroundImage = `url('${imgSrc}')`;
         piece.style.backgroundPosition = `${coord.x}% ${coord.y}%`;
         
-        // Stagger the pieces coming into view for extra smoothness
         piece.style.opacity = '0';
         setTimeout(() => piece.style.opacity = '1', 50 * i);
 
@@ -174,7 +199,7 @@ function addPointerListeners(piece) {
         originalSlot = activePiece.parentElement;
         
         activePiece.style.opacity = '0.6';
-        activePiece.style.transform = 'scale(1.04)'; // Subtle lift on press
+        activePiece.style.transform = 'scale(1.04)'; 
         activePiece.setPointerCapture(e.pointerId);
     });
 
@@ -193,7 +218,6 @@ function addPointerListeners(piece) {
             dropTarget !== activePiece &&
             dropTarget.parentElement === originalSlot
         ) {
-            // Smooth swap logic: Add visual feedback during the swap
             activePiece.classList.add('swapping');
             dropTarget.classList.add('swapping');
 
@@ -220,7 +244,7 @@ function addPointerListeners(piece) {
                 dropTarget.classList.remove('swapping');
 
                 checkSlotSolved(originalSlot);
-            }, 50); // Short delay makes the swap look cleaner
+            }, 50); 
         }
 
         activePiece = null;
@@ -245,7 +269,6 @@ function checkSlotSolved(slotElement) {
         slotElement.style.borderColor = '#22c55e';
         slotElement.classList.add('puzzle-solved-pop');
         
-        // Slightly longer delay before unlocking next slot to admire the complete image
         if (slotElement.id === 'slot-0') {
             setTimeout(() => unlockNextSlot('slot-1'), 600);
         } else if (slotElement.id === 'slot-1') {
