@@ -23,15 +23,19 @@ const gameBoard = document.getElementById('game-board');
 submitBtn.addEventListener('click', checkAnswer);
 secretInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAnswer(); });
 nextBtn.addEventListener('click', () => {
+    // 1. Begin exit animation for the old stage
     gameBoard.classList.add('slide-out-left');
 
+    // 2. Wait for the exit animation (400ms) to complete before swapping data
     setTimeout(() => {
         currentGroupIndex++;
         loadChapter(currentGroupIndex);
         
+        // 3. Clean up the exit class and begin the entrance animation
         gameBoard.classList.remove('slide-out-left');
         gameBoard.classList.add('slide-in-right');
         
+        // 4. Clean up the entrance class so it can be re-played later
         setTimeout(() => {
             gameBoard.classList.remove('slide-in-right');
         }, 400);
@@ -44,11 +48,10 @@ function playDingSound() {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const ctx = new AudioContext();
         
-        // First high chime note
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
         osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 note
+        osc1.frequency.setValueAtTime(587.33, ctx.currentTime); 
         gain1.gain.setValueAtTime(0.1, ctx.currentTime);
         gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
         osc1.connect(gain1);
@@ -56,11 +59,10 @@ function playDingSound() {
         osc1.start();
         osc1.stop(ctx.currentTime + 0.4);
 
-        // Second harmonic chime note slightly delayed
         const osc2 = ctx.createOscillator();
         const gain2 = ctx.createGain();
         osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(880.00, ctx.currentTime + 0.08); // A5 note
+        osc2.frequency.setValueAtTime(880.00, ctx.currentTime + 0.08); 
         gain2.gain.setValueAtTime(0.1, ctx.currentTime + 0.08);
         gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
         osc2.connect(gain2);
@@ -77,22 +79,19 @@ function checkAnswer() {
     if (secretInput.value.toLowerCase() === secretAnswer.toLowerCase()) {
         secretInput.classList.add('success-border');
         
-        // Play the success chime
         playDingSound();
         
-        // Apply global green flash victory state and display greeting text
         document.body.classList.add('global-success-flash');
         welcomeScreen.querySelector('h1').innerText = "¡Bienvenido!";
         errorMsg.style.display = 'none';
 
         setTimeout(() => {
-            // Revert background color back to normal midnight theme during screen transition
             document.body.classList.remove('global-success-flash');
             welcomeScreen.style.display = 'none';
             gameScreen.style.display = 'block';
             gameScreen.classList.add('fade-in');
             loadChapter(0);
-        }, 1200); // Extended slightly to let the green welcome screen look clean and deliberate
+        }, 1200); 
     } else {
         welcomeScreen.classList.add('shake');
         errorMsg.style.display = 'block';
@@ -108,7 +107,16 @@ function loadChapter(index) {
         return;
     }
     const group = storyGroups[index];
-    messageDisplay.innerText = group.text;
+    
+    // Add smooth message transition
+    messageDisplay.classList.add('fade-out');
+    setTimeout(() => {
+        messageDisplay.innerText = group.text;
+        messageDisplay.classList.remove('fade-out');
+        messageDisplay.classList.add('fade-in-quick');
+        setTimeout(() => messageDisplay.classList.remove('fade-in-quick'), 250);
+    }, 250);
+
     nextBtn.style.display = 'none';
     gameBoard.innerHTML = '';
 
@@ -137,12 +145,16 @@ function createPuzzleSlices(slotContainer, imgSrc) {
 
     const scrambledCoordinates = [...coordinates].sort(() => Math.random() - 0.5);
 
-    scrambledCoordinates.forEach((coord) => {
+    scrambledCoordinates.forEach((coord, i) => {
         const piece = document.createElement('div');
         piece.className = 'puzzle-piece';
         piece.style.backgroundImage = `url('${imgSrc}')`;
         piece.style.backgroundPosition = `${coord.x}% ${coord.y}%`;
         
+        // Stagger the pieces coming into view for extra smoothness
+        piece.style.opacity = '0';
+        setTimeout(() => piece.style.opacity = '1', 50 * i);
+
         piece.dataset.correctX = coord.x;
         piece.dataset.correctY = coord.y;
 
@@ -162,6 +174,7 @@ function addPointerListeners(piece) {
         originalSlot = activePiece.parentElement;
         
         activePiece.style.opacity = '0.6';
+        activePiece.style.transform = 'scale(1.04)'; // Subtle lift on press
         activePiece.setPointerCapture(e.pointerId);
     });
 
@@ -169,6 +182,7 @@ function addPointerListeners(piece) {
         if (!activePiece) return;
 
         activePiece.style.opacity = '1';
+        activePiece.style.transform = 'scale(1)';
         activePiece.releasePointerCapture(e.pointerId);
 
         const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
@@ -179,25 +193,34 @@ function addPointerListeners(piece) {
             dropTarget !== activePiece &&
             dropTarget.parentElement === originalSlot
         ) {
-            const originalBgImg = activePiece.style.backgroundImage;
-            const originalBgPos = activePiece.style.backgroundPosition;
-            
-            activePiece.style.backgroundImage = dropTarget.style.backgroundImage;
-            activePiece.style.backgroundPosition = dropTarget.style.backgroundPosition;
-            
-            dropTarget.style.backgroundImage = originalBgImg;
-            dropTarget.style.backgroundPosition = originalBgPos;
+            // Smooth swap logic: Add visual feedback during the swap
+            activePiece.classList.add('swapping');
+            dropTarget.classList.add('swapping');
 
-            const originalX = activePiece.dataset.correctX;
-            const originalY = activePiece.dataset.correctY;
+            setTimeout(() => {
+                const originalBgImg = activePiece.style.backgroundImage;
+                const originalBgPos = activePiece.style.backgroundPosition;
+                
+                activePiece.style.backgroundImage = dropTarget.style.backgroundImage;
+                activePiece.style.backgroundPosition = dropTarget.style.backgroundPosition;
+                
+                dropTarget.style.backgroundImage = originalBgImg;
+                dropTarget.style.backgroundPosition = originalBgPos;
 
-            activePiece.dataset.correctX = dropTarget.dataset.correctX;
-            activePiece.dataset.correctY = dropTarget.dataset.correctY;
+                const originalX = activePiece.dataset.correctX;
+                const originalY = activePiece.dataset.correctY;
 
-            dropTarget.dataset.correctX = originalX;
-            dropTarget.dataset.correctY = originalY;
+                activePiece.dataset.correctX = dropTarget.dataset.correctX;
+                activePiece.dataset.correctY = dropTarget.dataset.correctY;
 
-            checkSlotSolved(originalSlot);
+                dropTarget.dataset.correctX = originalX;
+                dropTarget.dataset.correctY = originalY;
+
+                activePiece.classList.remove('swapping');
+                dropTarget.classList.remove('swapping');
+
+                checkSlotSolved(originalSlot);
+            }, 50); // Short delay makes the swap look cleaner
         }
 
         activePiece = null;
@@ -222,10 +245,11 @@ function checkSlotSolved(slotElement) {
         slotElement.style.borderColor = '#22c55e';
         slotElement.classList.add('puzzle-solved-pop');
         
+        // Slightly longer delay before unlocking next slot to admire the complete image
         if (slotElement.id === 'slot-0') {
-            setTimeout(() => unlockNextSlot('slot-1'), 400);
+            setTimeout(() => unlockNextSlot('slot-1'), 600);
         } else if (slotElement.id === 'slot-1') {
-            setTimeout(() => unlockNextSlot('slot-2'), 400);
+            setTimeout(() => unlockNextSlot('slot-2'), 600);
         } else if (slotElement.id === 'slot-2' || !document.getElementById('slot-2')) {
             nextBtn.style.display = 'block';
             nextBtn.classList.add('fade-in');
